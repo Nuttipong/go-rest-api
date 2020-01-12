@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: fe-messaging-sv
+  labels:
+    app: fe-messaging-sv
+spec:
+  containers:
+  - name: fe-messaging-sv
+    image: docker-go:gen-1
+    resources: {}
+    ports:
+    - containerPort: 8080
+    livenessProbe:
+      httpGet:
+        path: /api/v1/liveness
+        port: 8080
+      initialDelaySeconds: 15
+      timeoutSeconds: 2
+      periodSeconds: 5
+      failureThreshold: 1
+    # readinessProbe:
+    #   httpGet:
+    #     path: /api/v1/liveness
+    #     port: 8080
+    #   initialDelaySeconds: 20
+    #   periodSeconds: 2
+  

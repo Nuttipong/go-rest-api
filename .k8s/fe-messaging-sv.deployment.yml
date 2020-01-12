@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fe-messaging-sv
+spec:
+  selector:
+    matchLabels:
+      app: fe-messaging-sv
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: fe-messaging-sv
+    spec:
+      containers:
+      - name: fe-messaging-sv
+        image: docker-go:gen-1
+        ports:
+        - containerPort: 8080
+        resources: {}
+        livenessProbe:
+            httpGet:
+              path: /api/v1/liveness
+              port: 8080
+            initialDelaySeconds: 15
+            timeoutSeconds: 2
+            periodSeconds: 5
+            failureThreshold: 1
+          # limits:
+          #   memory: "128Mi"
+          #   cpu: "100m"

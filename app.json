@@ -1,0 +1,15 @@
+{
+    "server": "127.0.0.1",
+    "port": "8080",
+    "perfPort": "8081",
+    "allowedOrigins": [
+        "*"
+    ],
+    "allowedHeaders": [
+        "Content-Type"
+    ],
+    "allowedMethods": [
+        "GET",
+        "POST"
+    ]
+}

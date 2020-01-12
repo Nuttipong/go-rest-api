@@ -1,0 +1,109 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app: mongo-secrets-env
+  name: mongo-secrets-env
+data:
+  MONGODB_DBNAME: client_message
+  MONGODB_ROLE: readWrite
+  MONGODB_ROOT_ROLE: root
+  MONGODB_ROOT_USERNAME: dbadmin
+  MONGODB_USERNAME: webrole
+
+---
+
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: local-storage
+provisioner: kubernetes.io/no-provisioner
+reclaimPolicy: Retain
+volumeBindingMode: WaitForFirstConsumer
+
+---
+
+# Note: While a local storage PV works, going with a more durable solution (NFS, cloud option, etc.) is recommended
+# Adding this for simulate to run on Docker Desktop Kubernetes since it only supports a single Node
+# https://kubernetes.io/blog/2018/04/13/local-persistent-volumes-beta/
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mongo-pv
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: local-storage
+  local:
+    path: /tmp/data/db
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - docker-desktop
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongo-pvc
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: local-storage
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: mongo
+  name: mongo
+spec:
+  serviceName: mongo
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongo
+  template:
+    metadata:
+      labels:
+        app: mongo
+    spec:
+      volumes:
+      - name: mongo-volume
+        persistentVolumeClaim:
+          claimName: mongo-pvc
+      # - name: secrets
+      #   secret:
+      #     secretName: db-passwords
+      containers:
+      - env:
+        - name: MONGODB_DBNAME
+          valueFrom:
+            configMapKeyRef:
+              key: MONGODB_DBNAME
+              name: mongo-secrets-env
+        image: mongo
+        name: mongo
+        ports:
+        - containerPort: 27017
+        # command:
+        # - mongod
+        # - "--auth"
+        resources: {}        
+        volumeMounts:
+        - name: mongo-volume
+          mountPath: /data/db
+      

@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: fe-messaging-sv
+spec:
+  type: LoadBalancer
+  selector:
+    app: fe-messaging-sv
+  ports:
+  - port: 8080
+    targetPort: 8080
